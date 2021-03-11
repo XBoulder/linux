@@ -1,0 +1,34 @@
+# Grab our configured image.  The source for this is found at:
+image: dockerregistry.emtrion.de/emtrion/debian-crossbuildtoolchain:0.2
+
+stages:
+  - build
+
+linux-build-job:
+  stage: build
+  # select/use only runners marked with the tag "docker" to show that the runner is configured with the executor "docker"
+  tags:
+    - docker
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"'
+      when: always
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: always
+    - when: never
+  script:
+    - uname -a
+    - pwd
+    - git status
+    - git log -n 1
+    - export ARCH=arm
+    - export CROSS_COMPILE=arm-linux-gnueabihf-
+    - make distclean
+    - make emsbc-argon_defconfig
+    - make -j 8 FIT_SOURCE_FILE=fit_image.its fit-deb-pkg
+    - ls -la ../linux-*
+    - mkdir artifacts
+    - mv ../linux-* artifacts
+  artifacts:
+    paths:
+      - artifacts
+    expire_in: 1 day
