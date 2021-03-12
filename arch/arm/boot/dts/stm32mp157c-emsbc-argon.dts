@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) emtrion GmbH 2019 - All Rights Reserved
+ * Author: Anthony Harivel <anthony.harivel@emtrion.de>.
+ */
+
+/dts-v1/;
+
+#include "stm32mp157c-emstamp-argon.dtsi"
+
+/ {
+	model = "emtrion emSBC-Argon";
+	compatible = "emtrion,stm32mp157c-emsbc-argon", "st,stm32mp157";
+
+	emmc_pwrseq: emmc-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		reset-gpios = <&gpiof 14 GPIO_ACTIVE_LOW>;
+	};
+};
+
+&sdmmc2 {
+	arm,primecell-periphid = <0x10153180>;
+	pinctrl-names = "default", "opendrain", "sleep";
+	pinctrl-0 = <&sdmmc2_b4_pins_b>;
+	pinctrl-1 = <&sdmmc2_b4_od_pins_b>;
+	pinctrl-2 = <&sdmmc2_b4_sleep_pins_a>;
+	non-removable;
+	st,neg-edge;
+	bus-width = <4>;
+	vmmc-supply = <&v3v3>;
+	mmc-pwrseq = <&emmc_pwrseq>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	keep-power-in-suspend;
+	status = "okay";
+};
