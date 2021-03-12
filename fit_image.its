@@ -1,0 +1,42 @@
+/dts-v1/;
+/ {
+	description = "FIT image components for emSBC-Argon";
+	#address-cells = <1>;
+
+	images {
+		kernel@1 {
+			description = "Linux kernel - base";
+			data = /incbin/("./arch/arm/boot/zImage");
+			type = "kernel";
+			arch = "arm";
+			os = "linux";
+			compression = "none";
+			load = <0xC0008000>;
+			entry = <0xC0008000>;
+			hash@1 {
+				algo = "sha256";
+			};
+		};
+
+		dtb@1 {
+			description = "DeviceTree blob - base";
+			data = /incbin/("./arch/arm/boot/dts/stm32mp157c-emsbc-argon.dtb");
+			type = "flat_dt";
+			arch = "arm";
+			compression = "none";
+			load = <0xc4000000>;
+			hash@1 {
+				algo = "sha256";
+			};
+		};
+	};
+
+	configurations {
+		default = "config@1";
+		config@1 {
+			description = "Base configuration";
+			kernel = "kernel@1";
+			fdt = "dtb@1";
+		};
+	};
+};
