@@ -664,6 +664,8 @@
 };
 
 &uart4 {
+	/delete-property/dmas;
+	/delete-property/dma-names;
 	pinctrl-names = "default", "sleep", "idle", "no_console_suspend";
 	pinctrl-0 = <&uart4_pins_a>;
 	pinctrl-1 = <&uart4_sleep_pins_a>;
