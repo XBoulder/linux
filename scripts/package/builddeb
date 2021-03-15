@@ -56,6 +56,9 @@ kernel_headers_packagename=linux-headers-$version
 libc_headers_packagename=linux-libc-dev
 dbg_packagename=$packagename-dbg
 
+MKIMAGE=$(which mkimage)
+fit_image_name=linux-${version}.itb
+
 if [ "$ARCH" = "um" ] ; then
 	packagename=user-mode-linux-$version
 fi
@@ -89,45 +92,50 @@ if [ "$ARCH" = "um" ] ; then
 	cp System.map "$tmpdir/usr/lib/uml/modules/$version/System.map"
 	cp $KCONFIG_CONFIG "$tmpdir/usr/share/doc/$packagename/config"
 	gzip "$tmpdir/usr/share/doc/$packagename/config"
+#else
+#	cp System.map "$tmpdir/boot/System.map-$version"
+#	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
+fi
+
+if [ ${FIT_SOURCE_FILE+x} ] && [ -n $MKIMAGE ]; then
+	$MKIMAGE -f $FIT_SOURCE_FILE $fit_image_name
+	mv $fit_image_name "$tmpdir/boot"
 else
-	cp System.map "$tmpdir/boot/System.map-$version"
-	cp $KCONFIG_CONFIG "$tmpdir/boot/config-$version"
-fi
-cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
-
-if is_enabled CONFIG_OF_EARLY_FLATTREE; then
-	# Only some architectures with OF support have this target
-	if [ -d "${srctree}/arch/$SRCARCH/boot/dts" ]; then
-		$MAKE -f $srctree/Makefile INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
-	fi
-fi
-
-if is_enabled CONFIG_MODULES; then
-	INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_install
-	rm -f "$tmpdir/lib/modules/$version/build"
-	rm -f "$tmpdir/lib/modules/$version/source"
-	if [ "$ARCH" = "um" ] ; then
-		mv "$tmpdir/lib/modules/$version"/* "$tmpdir/usr/lib/uml/modules/$version/"
-		rmdir "$tmpdir/lib/modules/$version"
-	fi
-	if [ -n "$BUILD_DEBUG" ] ; then
-		for module in $(find $tmpdir/lib/modules/ -name *.ko -printf '%P\n'); do
-			module=lib/modules/$module
-			mkdir -p $(dirname $dbg_dir/usr/lib/debug/$module)
-			# only keep debug symbols in the debug file
-			$OBJCOPY --only-keep-debug $tmpdir/$module $dbg_dir/usr/lib/debug/$module
-			# strip original module from debug symbols
-			$OBJCOPY --strip-debug $tmpdir/$module
-			# then add a link to those
-			$OBJCOPY --add-gnu-debuglink=$dbg_dir/usr/lib/debug/$module $tmpdir/$module
-		done
-
-		# resign stripped modules
-		if is_enabled CONFIG_MODULE_SIG_ALL; then
-			INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_sign
+	cp "$($MAKE -s -f $srctree/Makefile image_name)" "$tmpdir/$installed_image_path"
+	if is_enabled CONFIG_OF_EARLY_FLATTREE; then
+		# Only some architectures with OF support have this target
+		if [ -d "${srctree}/arch/$SRCARCH/boot/dts" ]; then
+			$MAKE -f $srctree/Makefile INSTALL_DTBS_PATH="$tmpdir/usr/lib/$packagename" dtbs_install
 		fi
 	fi
 fi
+
+#if is_enabled CONFIG_MODULES; then
+#	INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_install
+#	rm -f "$tmpdir/lib/modules/$version/build"
+#	rm -f "$tmpdir/lib/modules/$version/source"
+#	if [ "$ARCH" = "um" ] ; then
+#		mv "$tmpdir/lib/modules/$version"/* "$tmpdir/usr/lib/uml/modules/$version/"
+#		rmdir "$tmpdir/lib/modules/$version"
+#	fi
+#	if [ -n "$BUILD_DEBUG" ] ; then
+#		for module in $(find $tmpdir/lib/modules/ -name *.ko -printf '%P\n'); do
+#			module=lib/modules/$module
+#			mkdir -p $(dirname $dbg_dir/usr/lib/debug/$module)
+#			# only keep debug symbols in the debug file
+#			$OBJCOPY --only-keep-debug $tmpdir/$module $dbg_dir/usr/lib/debug/$module
+#			# strip original module from debug symbols
+#			$OBJCOPY --strip-debug $tmpdir/$module
+#			# then add a link to those
+#			$OBJCOPY --add-gnu-debuglink=$dbg_dir/usr/lib/debug/$module $tmpdir/$module
+#		done
+#
+#		# resign stripped modules
+#		if is_enabled CONFIG_MODULE_SIG_ALL; then
+#			INSTALL_MOD_PATH="$tmpdir" $MAKE -f $srctree/Makefile modules_sign
+#		fi
+#	fi
+#fi
 
 if [ "$ARCH" != "um" ]; then
 	$MAKE -f $srctree/Makefile headers

@@ -86,6 +86,16 @@ PHONY += intdeb-pkg
 intdeb-pkg:
 	+$(CONFIG_SHELL) $(srctree)/scripts/package/builddeb
 
+# custom command fit-deb-pkg. Builds kernel-pkg containing only FIT-Image
+PHONY += fit-deb-pkg
+fit-deb-pkg:
+	test -n "$(FIT_SOURCE_FILE)" #FIT_SOURCE_FILE is defined as an argument with make command
+	$(CONFIG_SHELL) $(srctree)/scripts/package/mkdebian
+	$(call cmd,src_tar,$(KDEB_SOURCENAME))
+	origversion=$$(dpkg-parsechangelog -SVersion |sed 's/-[^-]*$$//');\
+		mv $(KDEB_SOURCENAME).tar.gz ../$(KDEB_SOURCENAME)_$${origversion}.orig.tar.gz
+	+dpkg-buildpackage -r$(KBUILD_PKG_ROOTCMD) -a$$(cat debian/arch) $(DPKG_FLAGS) -i.git -us -uc
+
 # snap-pkg
 # ---------------------------------------------------------------------------
 PHONY += snap-pkg
