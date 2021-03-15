@@ -179,6 +179,7 @@ Homepage: http://www.kernel.org/
 
 Package: $packagename
 Architecture: $debarch
+Pre-Depends: emboot
 Description: Linux kernel, version $version
  This package contains the Linux kernel, modules and corresponding other
  files, version: $version.
