@@ -518,10 +518,12 @@
 };
 
 &cpu0{
+	clock-frequency = <650000000>;
 	cpu-supply = <&vddcore>;
 };
 
 &cpu1{
+	clock-frequency = <650000000>;
 	cpu-supply = <&vddcore>;
 };
 
