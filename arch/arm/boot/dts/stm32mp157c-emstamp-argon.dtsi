@@ -83,7 +83,7 @@
 		};
 	};
 
-	led {
+	led: gpio_leds {
 		compatible = "gpio-leds";
 		green {
 			label = "heartbeat";
